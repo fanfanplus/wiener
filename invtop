@@ -1,0 +1,17 @@
+function [ RI ] = invtop( R )
+%INVTOP Is inverse toeplitz matrix
+%   Inverse matrix is stored by rows or columns in RI
+
+% Author: Felix Zhang
+% Last modified: 2018-4-9
+
+% References:
+% [1] M. T. Silvia, and E. A. Robinson (1979) "Deconvolution of Geophysical Time
+% Series in the Exploration for Oil and Natural Gas".
+
+LR = length(R);
+for K = 1: LR
+    SPACE = impuls(LR, K);
+    RI(K, :) = eureka(R, SPACE);
+end
+end
