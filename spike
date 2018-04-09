@@ -1,0 +1,27 @@
+function [ A, INDEX, ASE ] = spike( B, LA)
+% SPIKE Is spiking filter
+%   Inputs:    B           input sequence
+%                  LA         length of spiking filter
+%   Outputs:  A          coefficients of spiking filter
+%                  INDEX   optimum spiking position
+%                  ASE       average squared error
+
+% Author: Felix Zhang
+% Last modified: 2018-4-9
+
+% References:
+% [1] M. T. Silvia, and E. A. Robinson (1979) "Deconvolution of Geophysical Time
+% Series in the Exploration for Oil and Natural Gas".
+
+LB = length(B);
+LD = LA+LB-1;
+for I = 1: LD
+    SPACE = impuls(LD, I);
+    [ A, C, ASE(I) ] = shape(B, SPACE, LA);
+end
+[M, INDEX] = min(ASE);
+
+ASE = M;
+SPACE = impuls(LD, INDEX);
+A = shape(B, SPACE, LA);
+end
