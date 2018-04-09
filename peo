@@ -1,0 +1,63 @@
+function [ A ] = peo( R )
+%PEO Is the auxillary teoplitz recursion
+%   It gives the prediction-error operator A
+
+% Author: Felix Zhang
+% Last modified: 2018-4-9
+
+% References:
+% [1] M. T. Silvia, and E. A. Robinson (1979) "Deconvolution of Geophysical Time
+% Series in the Exploration for Oil and Natural Gas".
+
+LR = length(R);
+V = R(1);
+A(1) = 1.0;
+if LR == 1
+    return;
+end
+for L = 2: LR
+    D = 0.0;
+    
+    L3 = L-1;
+    for J = 1 : L3
+         K = L-J+1;
+         D = D + A(J)*R(K);
+        
+    end
+    C = D/V;
+    if L == 2
+        A(L) = -C;
+        V = V-C*D;
+        
+        continue;
+    end
+    L1 = floor((L-2)/2);
+    L2 = L1+1;
+    if L2 < 2
+        LT3 = L2+1;
+        A(LT3) = A(LT3) - C*A(LT3);
+        A(L) = -C;
+        V = V-C*D;
+        
+        continue;
+    end
+    for J = 2 : L2
+        HOLD = A(J);
+        K = L-J+1;
+        A(J) = A(J)-C*A(K);
+        A(K) = A(K)-C*HOLD;
+    end
+    if (2*L1) == (L-2)
+        A(L) = -C;
+        V = V-C*D;
+       
+        continue;
+    end
+    LT3 = L2+1;
+    A(LT3) = A(LT3) - C*A(LT3);
+    A(L) = -C;
+    V = V-C*D;
+    
+end
+        
+end
