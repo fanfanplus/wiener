@@ -1,0 +1,30 @@
+function [ A, C, ASE ] = shape( B, D, LA )
+%SHAPE Is shaping filter
+%   Inputs:    B      input sequence
+%                  D     desired output sequence
+%                  LA    length of shaping filter
+%   Outputs:  A     coefficients of shaping filter
+%                  C      actual output of filter
+%                  ASE  average squared error between desired and actual
+%                          output of filter
+
+% Author: Felix Zhang
+% Last modified: 2018-4-9
+
+% References:
+% [1] M. T. Silvia, and E. A. Robinson (1979) "Deconvolution of Geophysical Time
+% Series in the Exploration for Oil and Natural Gas".
+
+LB = length(B);
+LD = length(D);
+
+[R, lags] = xcorr(B, B, LA-1);
+R = R(lags>=0);
+[G, lags] = xcorr(D, B, LA-1);
+G = G(lags>=0);
+A = eureka(R, G);
+C = conv(B, A);
+DD = dot(D, D);
+AG = dot(A, G);
+ASE = (DD-AG)/DD;
+end
