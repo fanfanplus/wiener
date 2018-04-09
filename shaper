@@ -1,0 +1,68 @@
+function [ A, O, INDEX, ERRORS ] = shaper( B, D, LA )
+% SHAPER Computes the least-squares waveshaping filter for optimum position
+%      It make use of Simpson sideways recursion as performed by SIDE
+
+%   Inputs:    B            input sequence
+%                  D           desired output
+%                  LA          length of filter
+%   Outputs:  A           least-squares shaping filter for optimum
+%                                positioning
+%                  O            actual output for optimum position
+%                  INDEX    optimum position as MATLAB subscript 
+%                  ERRORS  average squared error from 1 to LC
+
+% Author: Felix Zhang
+% Last modified: 2018-4-9
+
+% References:
+% [1] M. T. Silvia, and E. A. Robinson (1979) "Deconvolution of Geophysical Time
+% Series in the Exploration for Oil and Natural Gas".
+
+LB = length(B);
+LD = length(D);
+LC = LA+LB-1;
+LCD = LC+LD-1;
+DD = dot(D, D);
+[R, lags] = xcorr(B, B, LA-1);
+R = R(lags>=0);
+
+for I = 1: LCD
+    C = zeros(1, LCD);
+    LDI = LD-I+1;
+    if I <= LD
+        C(1: I) = D(LDI: end);
+    end
+    ILD = I-LD+1;
+    if I >= LC
+        C(ILD: LC) = D(1: LCD-I+1);
+    end
+    if (I > LD)  && (I < LC)
+        C(ILD: I) = D;
+    end
+    [G, lags] = xcorr(C, B, LA-1);
+    G = G(lags>=0);
+    if I >= 2
+        A = side(G, A, PEOC, R);
+        AG = dot(A, G);
+        ERRORS(I) = (DD-AG)/DD;
+        continue;
+    end
+    [A, PEOC] = eureka(R, G);
+     AG = dot(A, G);
+     ERRORS(I) = (DD-AG)/DD;
+end
+
+[EMIN, INDEX] = min(ERRORS);
+LDIND = LD-INDEX+1;
+if INDEX <= LD
+    C(1: INDEX) = D(LDIND: end);
+end
+INDLD = INDEX-LD+1;
+if INDEX >= LC
+    C(INDLD: LC) = D(1: LCD-INDEX+1);
+end
+if (INDEX > LD)  && (INDEX < LC)
+    C(INDLD: INDEX) = D;
+end
+
+[A, O] = shape(B, C, LA);
